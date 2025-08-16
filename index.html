@@ -428,7 +428,24 @@
             if (member && member.certificate_issued) {
                 // Check if certificate is still valid
                 const currentDate = new Date();
-                const validityDate = new Date(member.validity);
+                
+                // Parse validity date - handle DD.MM.YYYY format
+                let validityDate;
+                if (member.validity.includes('.')) {
+                    // Handle DD.MM.YYYY format
+                    const parts = member.validity.split('.');
+                    if (parts.length === 3) {
+                        const day = parts[0];
+                        const month = parts[1];
+                        const year = parts[2];
+                        validityDate = new Date(year, month - 1, day); // month is 0-indexed
+                    } else {
+                        validityDate = new Date(member.validity);
+                    }
+                } else {
+                    validityDate = new Date(member.validity);
+                }
+                
                 const isValid = validityDate >= currentDate;
                 
                 // Valid certificate
