@@ -274,8 +274,8 @@
                 type="text" 
                 id="membershipId" 
                 class="search-box" 
-                placeholder="Enter Membership ID (e.g., 001234)"
-                maxlength="10"
+                placeholder="Enter Membership ID (e.g., 1234 or 00001234)"
+                maxlength="8"
                 autocomplete="off"
             >
             <button onclick="verifyMember()" class="search-btn" id="verifyBtn">
@@ -317,29 +317,43 @@
             }
         }
 
-        // Sample database for testing
+        // Sample database for testing (8-digit IDs)
         function loadSampleDatabase() {
             membersDatabase = {
-                "001234": {
+                "00001234": {
                     "name": "John Smith",
-                    "membership_id": "001234",
+                    "membership_id": "00001234",
                     "validity": "2025-12-31",
                     "certificate_issued": true,
                     "issue_date": "2024-01-15"
                 },
-                "002567": {
+                "00002567": {
                     "name": "Sarah Johnson",
-                    "membership_id": "002567",
+                    "membership_id": "00002567",
                     "validity": "2025-06-30",
                     "certificate_issued": true,
                     "issue_date": "2024-01-20"
                 },
-                "000123": {
+                "00000123": {
                     "name": "Michael Davis",
-                    "membership_id": "000123",
+                    "membership_id": "00000123",
                     "validity": "2024-12-31",
                     "certificate_issued": true,
                     "issue_date": "2024-01-10"
+                },
+                "01234567": {
+                    "name": "Alice Johnson",
+                    "membership_id": "01234567",
+                    "validity": "2025-08-15",
+                    "certificate_issued": true,
+                    "issue_date": "2024-02-01"
+                },
+                "00987654": {
+                    "name": "Bob Wilson",
+                    "membership_id": "00987654",
+                    "validity": "2025-11-30",
+                    "certificate_issued": true,
+                    "issue_date": "2024-03-10"
                 }
             };
         }
@@ -388,8 +402,28 @@
             loading.style.display = 'none';
             verifyBtn.disabled = false;
 
-            // Check if member exists in database
-            const member = membersDatabase[membershipId];
+            // Normalize the membership ID - pad with zeros to 8 digits
+            const normalizedId = membershipId.padStart(8, '0');
+            
+            // Also check for the ID without leading zeros in case it's stored differently
+            const alternativeIds = [
+                normalizedId,
+                membershipId,
+                membershipId.padStart(6, '0'),
+                parseInt(membershipId, 10).toString() // Remove leading zeros completely
+            ];
+
+            // Find member by trying different ID formats
+            let member = null;
+            let foundId = null;
+            
+            for (const testId of alternativeIds) {
+                if (membersDatabase[testId]) {
+                    member = membersDatabase[testId];
+                    foundId = testId;
+                    break;
+                }
+            }
 
             if (member && member.certificate_issued) {
                 // Check if certificate is still valid
@@ -447,7 +481,14 @@
                         
                         <p style="margin-top: 20px;">
                             <strong>Need help?</strong><br>
-                            Contact CSI administration at <strong>info@csi-india.org</strong>
+                            Contact CSI administration with your certificate details.
+                        </p>
+                        
+                        <p style="margin-top: 15px; font-size: 14px; opacity: 0.8;">
+                            <strong>Tips:</strong><br>
+                            • Try entering the ID with or without leading zeros<br>
+                            • Check for any typos in the membership ID<br>
+                            • Ensure you're entering the complete 8-digit ID
                         </p>
                     </div>
                 `;
@@ -463,11 +504,11 @@
             }
         });
 
-        // Format membership ID input
+        // Format membership ID input (allow up to 8 digits)
         document.getElementById('membershipId').addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^0-9]/g, '');
-            if (value.length > 6) {
-                value = value.substring(0, 6);
+            if (value.length > 8) {
+                value = value.substring(0, 8);
             }
             e.target.value = value;
         });
